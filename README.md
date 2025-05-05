@@ -1,92 +1,33 @@
-Tog mina egna anteckningar och lät ChatGPT organisera dem:
+1. Skapa Kind-kluster
+Starta ett lokalt Kubernetes-kluster med Kind för att köra miljön.
 
-🛠️ Steg-för-steg
-1️⃣ Skapa Kind-kluster
-Jag startade med att skapa ett lokalt Kind-kluster (Kubernetes in Docker).
+2. Installera Kyverno
+Installera Kyverno i klustret.
 
-2️⃣ Installera Kyverno och skapa policy
-Installerade Kyverno i Kind-klustret för att hantera policies.
+Skapa en policy som blockerar alla deployments som saknar labeln demo=true.
 
-Skapade en policy som:
+Testa policyn med en enkel deployment för att säkerställa att den fungerar.
 
-➡️ Blockerar alla deployments som saknar labeln demo=true.
+3. Bygg Flask-app
+Skapa en enkel Python-app med Flask som returnerar HTTP 200 OK.
 
-Testade policyn med en test-deployment och verifierade att den fungerade som tänkt.
+Skriv en Dockerfile och bygg en Docker-image.
 
-3️⃣ Bygga Python Flask-app
-Skapade en enkel Python-app med Flask som returnerar HTTP 200 OK.
+Testa lokalt att imagen fungerar som den ska.
 
-Skrev en Dockerfile för att paketera appen:
+4. Skapa Namespace
+Skapa ett eget namespace för din app, exempelvis flask-app-namespace.
 
-dockerfile
-Copy
-Edit
-FROM python:3.9
-WORKDIR /app
-COPY . /app
-RUN pip install flask
-CMD ["python", "app.py"]
-Byggde Docker-imagen och testade att den fungerar som den ska.
+5. Ladda Docker-image till Kind
+Ladda upp Docker-imagen till Kind-klustret. Här kan det bli problem om imagen inte är korrekt inladdad – kontrollera noga att allt fungerar efteråt.
 
-4️⃣ Skapa Kubernetes Namespace
-Skapade ett nytt namespace för appen:
+6. Skapa Service
+Skapa en Kubernetes Service för att exponera Flask-appen internt i klustret så andra pods kan nå den.
 
-bash
-Copy
-Edit
-kubectl create namespace flask-app-namespace
-5️⃣ Ladda Docker-image till Kind
-Jag stötte på problem med att pusha Docker-imagen till Kind-klustret.
+7. Installera Prometheus
+Installera Prometheus med Helm.
 
-Lösning:
-Jag använde kommandot nedan för att ladda upp imagen korrekt till Kind:
+Viktigt: Se till att rätt label (demo=true) finns på alla resurser som ska övervakas.
+Detta var lite krångligt och behövde justeras manuellt för att få allt att fungera.
 
-bash
-Copy
-Edit
-kind load docker-image <image-name>
-Efter detta fungerade allt och appen körde utan problem.
-
-6️⃣ Skapa Kubernetes Service
-Jag skapade ett Kubernetes Service-manifest för att exponera Flask-appen internt så att andra pods kunde nå den:
-
-yaml
-Copy
-Edit
-apiVersion: v1
-kind: Service
-metadata:
-  name: flask-app-service
-  namespace: flask-app-namespace
-spec:
-  selector:
-    app: flask-app
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-7️⃣ Installera Prometheus
-Jag installerade Prometheus med Helm:
-
-bash
-Copy
-Edit
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-helm install prometheus prometheus-community/prometheus
-För att Prometheus skulle hitta min app behövde jag lägga till labeln:
-
-yaml
-Copy
-Edit
-labels:
-  demo: "true"
-Det var lite krångligt och jag behövde manuellt se till att allt hade rätt labels. Prometheus fungerade bra i början men slutade tyvärr fungera senare av okänd anledning.
-
-💡 Lärdomar
-demo=true-labeln är avgörande för att både Kyverno och Prometheus ska fungera korrekt.
-
-Att ladda Docker-images till Kind kräver kommandot kind load docker-image. En vanlig docker push fungerar inte.
-
-Helm gör det enkelt att installera Prometheus, men label selectors kan vara trixiga att felsöka.
-
+SAMMANFATTNING AV MINA ANTECKNINGAR AV CHATGPT
